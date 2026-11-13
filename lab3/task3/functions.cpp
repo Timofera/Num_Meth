@@ -48,33 +48,8 @@ std::vector<double> approximation_polynomial_first_degree(const std::vector<doub
         square_error += diff * diff;
     }
 
-    std::string out;
 
-    for (int i = 0; i < 2; ++i) {
-
-        if (result[i] < 0) {
-            out += '-';
-            if (i != 0)
-                out += ' ';
-        } else if (i != 0) {
-            out += "+ ";
-        }
-
-        out += std::format("{:.4f}", std::abs(result[i]));
-
-        if (i > 0) {
-            out += "x";
-            if (i > 1) {
-                out += "^" + std::to_string(i);
-            }
-        }
-
-        out += ' ';
-    }
-
-    std::cout << out << std::endl;
     std::cout << std::format("Square Error: {:.4f}", square_error) << std::endl;
-
     return result;
 }
 
@@ -134,33 +109,8 @@ std::vector<double> approximation_polynomial_second_degree(const std::vector<dou
         square_error += diff * diff;
     }
 
-    std::string out;
 
-    for (int i = 0; i < 3; ++i) {
-
-        if (result[i] < 0) {
-            out += '-';
-            if (i != 0)
-                out += ' ';
-        } else if (i != 0) {
-            out += "+ ";
-        }
-
-        out += std::format("{:.4f}", std::abs(result[i]));
-
-        if (i > 0) {
-            out += "x";
-            if (i > 1) {
-                out += "^" + std::to_string(i);
-            }
-        }
-
-        out += ' ';
-    }
-
-    std::cout << out << std::endl;
     std::cout << std::format("Square Error: {:.4f}", square_error) << std::endl;
-
     return result;
 
 
@@ -208,32 +158,65 @@ std::vector<double> approximation_polynomial_third_degree(const std::vector<doub
         double diff = Fsum - y[i];
         square_error += diff * diff;
     }
-    std::string out;
 
-    for (int i = 0; i < 4; ++i) {
 
-        if (result[i] < 0) {
-            out += '-';
-            if (i != 0)
-                out += ' ';
-        } else if (i != 0) {
-            out += "+ ";
-        }
-
-        out += std::format("{:.4f}", std::abs(result[i]));
-
-        if (i > 0) {
-            out += "x";
-            if (i > 1) {
-                out += "^" + std::to_string(i);
-            }
-        }
-
-        out += ' ';
-    }
-
-    std::cout << out << std::endl;
 
     std::cout << std::format("Square Error: {:.4f}", square_error) << std::endl;
+    return result;
+}
+
+
+std::vector<double> approximation_polynomial_fifth_degree(const std::vector<double>& x, const std::vector<double>& y) {
+    const int N = x.size();
+
+    LinearEquation<double> equation(6);          // 6 неизвестных: a0..a5
+    double** coef = equation.matrix.coefficients;
+
+    // xsums[j] = sum x^(j+1), j = 0..9  -> степени x^1 .. x^10
+    // ysums[j] = sum y*x^j,  j = 0..5
+    std::vector<double> xsums(10, 0.0), ysums(6, 0.0);
+
+    for (int i = 0; i < N; ++i) {
+        double xp = 1.0;
+        for (int j = 0; j < 10; ++j) {
+            xp *= x[i];                 // xp = x^(j+1)
+            xsums[j] += xp;
+        }
+        xp = 1.0;
+        for (int j = 0; j < 6; ++j) {
+            ysums[j] += y[i] * xp;      // ysums[j] = sum y*x^j
+            xp *= x[i];
+        }
+    }
+
+    // coef[k][i] = sum x^(k+i), но для k+i == 0 это N (= sum 1)
+    for (int k = 0; k < 6; ++k) {
+        for (int i = 0; i < 6; ++i) {
+            if (k + i == 0)
+                coef[k][i] = N;          // sum x^0
+            else
+                coef[k][i] = xsums[k + i - 1];   // sum x^(k+i)
+        }
+        equation.b[k] = ysums[k];
+    }
+
+    const double* a = solveEquation(equation);
+    std::vector<double> result(a, a + 6);
+    delete[] a;
+
+    // Φ = sum (F5(x_j) - y_j)^2
+    double square_error = 0.0;
+    for (int i = 0; i < N; ++i) {
+        double Fsum = 0.0, xp = 1.0;
+        for (int j = 0; j < 6; ++j) {
+            Fsum += result[j] * xp;
+            xp *= x[i];
+        }
+        double diff = Fsum - y[i];
+        square_error += diff * diff;
+    }
+
+
+    std::cout << std::format("Square Error: {:.9f}", square_error) << std::endl;
     return result;
 }

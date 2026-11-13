@@ -13,4 +13,5 @@
 std::vector<double> approximation_polynomial_first_degree(const std::vector<double>& x, const std::vector<double>& y);
 std::vector<double> approximation_polynomial_second_degree(const std::vector<double>& x, const std::vector<double>& y);
 std::vector<double> approximation_polynomial_third_degree(const std::vector<double>& x, const std::vector<double>& y);
+std::vector<double> approximation_polynomial_fifth_degree(const std::vector<double>& x, const std::vector<double>& y);
 #endif //NUMERIC_METHODS_MAIN_H
